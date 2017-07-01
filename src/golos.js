@@ -26,11 +26,11 @@ async function retrieveDynGlobProps() {
 async function getCurrentServerTimeAndBlock() {
     await retrieveDynGlobProps();
     if(props.time) { 
-        lastCommitedBlock = props.last_irreversible_block_num;
+        lastCommitedBlock = props.head_block_number;
         log.info("lastCommitedBlock = " + lastCommitedBlock + ", headBlock = " + props.head_block_number);
         return {
             time : Date.parse(props.time), 
-            block : props.last_irreversible_block_num 
+            block : props.head_block_number 
         };
     }
     throw "Current time could not be retrieved";
