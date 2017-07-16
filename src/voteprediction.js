@@ -6,19 +6,26 @@ const global = require("./global");
 
 const MAXAGE = (1000 * 60 * 10) / 3;
 
-function notVoted(content, userid) {
-    for(vote of content.active_votes) {
-        if(vote.voter == userid) {
-            log.info("\t" + userid + " already voted");
-            return false;
+function notVoted(content, userid, vote) {
+    for(v of content.active_votes) {
+        
+        if(v.voter == userid) {
+            log.info("found vote of " + userid + " with weight " + v.percent + "(" + vote.weight + ")" );
+            if(v.percent == vote.weight) {
+                log.info("\t" + userid + " already voted with same weight");
+                return false;
+            } else {
+                log.info(userid + " not yet voted" );
+                break;
+            }
         }
     }
-    return true;
+    return true;    
 }
 
 async function doVote(vote, userid) {
     if(global.settings.broadcast) {
-        await steem.broadcast.voteAsync(global.settings.users[userid], userid, vote.author, vote.permlink, 100 * 100);
+        await steem.broadcast.voteAsync(global.settings.users[userid], userid, vote.author, vote.permlink, vote.weight);
     }
     log.info("\t" + userid + " voted (" + global.settings.broadcast + ")");
 }
@@ -28,11 +35,10 @@ async function followVote(vote) {
     let content = await steem.api.getContentAsync(vote.author, vote.permlink);
     
     for(let userid of Object.keys(global.settings.users)) {
-        if(notVoted(content, userid)) {
+        if(notVoted(content, userid, vote)) {
             await doVote(vote, userid);
         }
     }
-    
 }
 
 async function processBlock(bn) {
@@ -46,7 +52,7 @@ async function processBlock(bn) {
             switch(op) {
                 case "vote":
                     log.debug("found vote of " + opBody.voter + " for " + opBody.author + "/" + opBody.permlink);
-                    if(opBody.voter == global.settings.leader) {
+                    if(global.settings.leaders.includes(opBody.voter)) {
                         await followVote(opBody);
                     }
                     //break;
@@ -63,7 +69,7 @@ module.exports.run = async function() {
 
     let props = await golos.getCurrentServerTimeAndBlock();
     let block = props.block - 3;
-    //block = 7280531 - 1;
+    //block = 7780489;
     log.info("start looping with block " + block);
     while(true) {
         //log.info("processing block " + block);
