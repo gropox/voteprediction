@@ -27,7 +27,7 @@ if(typeof window == "undefined") {
         broadcast : false,
         minVotePower : 80,
         maxVotePower : 95,
-        leader : "eee",
+        leaders : ["eee", "ropox"],
         users : {
             "ropox" : "5PRIVKEY"
         }
@@ -36,17 +36,19 @@ if(typeof window == "undefined") {
 
     function init() {
         //Load setting Object
+        
         try {
-            let sets = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
-            module.exports.settings = sets;  
-            //console.log("loaded settings:\n" + JSON.stringify(module.exports.settings, null, 4));     
-        } catch(e) {
-            console.warn("unable to read config (" + CONFIG_FILE + ")");
-            try {
+            
+            if(fs.existsSync(CONFIG_FILE)) {
+                let sets = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
+                module.exports.settings = sets;
+            } else {
                 fs.writeFileSync(CONFIG_FILE, JSON.stringify(module.exports.settings, null, 4), "utf8");
-            } catch(e) {
-                console.error("unable to create dummy config (" + CONFIG_FILE + ")");
-            }
+            }                
+            
+        } catch(e) {
+            console.error("unable to read config (" + CONFIG_FILE + ")");
+            console.error(e);
         }
     }
 
