@@ -63,7 +63,7 @@ module.exports.run = async function() {
 
     let props = await golos.getCurrentServerTimeAndBlock();
     let block = props.block - 3;
-    //DBG block = 7280531 - 1;
+    //block = 7280531 - 1;
     log.info("start looping with block " + block);
     while(true) {
         //log.info("processing block " + block);
