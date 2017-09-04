@@ -181,6 +181,8 @@ async function getAccount(userid) {
     return null;
 }
 
+module.exports.getAccount = getAccount;
+
 function convertVerstings(vesting) {
     let SPMV = 1000000.0 * parseFloat(props.total_vesting_fund_steem.split(" ")[0]) / parseFloat(props.total_vesting_shares.split(" ")[0]);
     return SPMV * vesting / 1000000;

@@ -4,7 +4,33 @@ const log = require("./logger").getLogger(__filename);
 const global = require("./global");
 
 
-const MAXAGE = (1000 * 60 * 10) / 3;
+const MAXAGE =  (1000*60*60*24);
+const MINPOWER = 8600;
+const MAXPOWER = 10000;
+const POWERRANGE = MAXPOWER - MINPOWER;
+const RANGE = 0.5;
+
+async function getMinVotePower() {
+    let min = MAXPOWER;
+    for(let userid of Object.keys(global.settings.users)) {
+        let u = await golos.getAccount(userid);
+        if(min > u.voting_power) {
+            min = u.voting_power;
+        }
+    }
+    log.debug("min voting_power = " + min);
+    return min;
+}
+
+async function getMaxAge() {
+    const minVotingPower = await getMinVotePower();
+    const power = minVotingPower - MINPOWER;
+    if(power < 0) {
+        return MAXAGE;
+    }
+    const scale = 1 - (power / POWERRANGE / 2);
+    return scale * MAXAGE;
+}
 
 class Stat {
     constructor(userid, quote) {
@@ -17,7 +43,7 @@ class Stat {
         if(this.votes.length > 0) {
             log.info("oldest vote's age " + ((Date.now() - this.votes[0]) / 1000 / 60 / 60).toFixed(2) + " hours ");
         }
-        while(this.votes.length > 0 && this.votes[0] < (Date.now() - (1000*60*60*24))) {
+        while(this.votes.length > 0 && this.votes[0] < (Date.now() - getMaxAge())) {
             this.votes.shift();
             log.info("del old vote from " + this.userid + " cnt " + this.votes.length);
         }
