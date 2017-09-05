@@ -18,7 +18,7 @@ async function getMinVotePower() {
             min = u.voting_power;
         }
     }
-    log.debug("min voting_power = " + min);
+    log.info("min voting_power = " + min);
     return min;
 }
 
@@ -29,6 +29,7 @@ async function getMaxAge() {
         return MAXAGE;
     }
     const scale = 1 - (power / POWERRANGE / 2);
+    log.info("scale = " + scale);
     return scale * MAXAGE;
 }
 
@@ -39,18 +40,21 @@ class Stat {
         this.votes = [];
     }
 
-    cleanupVotes() {
+    async cleanupVotes() {
+        let maxage = 0;
         if(this.votes.length > 0) {
+            maxage = await getMaxAge();
+            log.info("max age = " + ((Date.now() - maxage) / 1000 / 60 / 60).toFixed(2) + " hours " )
             log.info("oldest vote's age " + ((Date.now() - this.votes[0]) / 1000 / 60 / 60).toFixed(2) + " hours ");
         }
-        while(this.votes.length > 0 && this.votes[0] < (Date.now() - getMaxAge())) {
+        while(this.votes.length > 0 && this.votes[0] < (Date.now() - maxage)) {
             this.votes.shift();
             log.info("del old vote from " + this.userid + " cnt " + this.votes.length);
         }
     }
 
-    checkVote() {
-        this.cleanupVotes();
+    async checkVote() {
+        await this.cleanupVotes();
         return (this.votes.length < this.quote);
     }
 
@@ -110,7 +114,7 @@ async function processBlock(bn) {
                 case "vote":
                     if(global.settings.leaders.includes(opBody.voter)) {
                         log.debug("found vote of " + opBody.voter + " for " + opBody.author + "/" + opBody.permlink);
-                        if(opBody.weight > 0 && STATS[opBody.voter].checkVote()) {
+                        if(opBody.weight > 0 && await STATS[opBody.voter].checkVote()) {
                             await followVote(opBody);
                             STATS[opBody.voter].addVote();
                             VOTED = true;
