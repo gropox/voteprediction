@@ -113,7 +113,7 @@ async function processBlock(bn) {
             switch(op) {
                 case "vote":
                     if(global.settings.leaders.includes(opBody.voter)) {
-                        log.debug("found vote of " + opBody.voter + " for " + opBody.author + "/" + opBody.permlink);
+                        log.info("found vote of " + opBody.voter + " for " + opBody.author + "/" + opBody.permlink);
                         if(opBody.weight > 0 && await STATS[opBody.voter].checkVote()) {
                             await followVote(opBody);
                             STATS[opBody.voter].addVote();
