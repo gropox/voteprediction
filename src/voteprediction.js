@@ -44,7 +44,7 @@ class Stat {
         let maxage = 0;
         if(this.votes.length > 0) {
             maxage = await getMaxAge();
-            log.info("max age = " + ((Date.now() - maxage) / 1000 / 60 / 60).toFixed(2) + " hours " )
+            log.info("max age = " + ((maxage) / 1000 / 60 / 60).toFixed(2) + " hours " )
             log.info("oldest vote's age " + ((Date.now() - this.votes[0]) / 1000 / 60 / 60).toFixed(2) + " hours ");
         }
         while(this.votes.length > 0 && this.votes[0] < (Date.now() - maxage)) {
