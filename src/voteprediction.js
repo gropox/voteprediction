@@ -1,8 +1,11 @@
-const golos = require("./golos");
-const steem = require("steem");
-const log = require("./logger").getLogger(__filename);
-const global = require("./global");
+const ga = require("golos-addons");
+const golos = ga.golos;
+const global = ga.global;
 
+global.initApp("vp");
+golos.setWebsocket(global.CONFIG.golos_websocket);
+
+const log = global.getLogger("voteprediction");
 
 const MAXAGE =  (1000*60*60*24);
 const MINPOWER = 8600;
@@ -12,7 +15,7 @@ const RANGE = 0.5;
 
 async function getMinVotePower() {
     let min = MAXPOWER;
-    for(let userid of Object.keys(global.settings.users)) {
+    for(let userid of Object.keys(global.CONFIG.users)) {
         let u = await golos.getAccount(userid);
         if(min > u.voting_power) {
             min = u.voting_power;
@@ -85,26 +88,29 @@ function notVoted(content, userid, vote) {
 }
 
 async function doVote(vote, userid) {
-    if(global.settings.broadcast) {
-        await steem.broadcast.voteAsync(global.settings.users[userid], userid, vote.author, vote.permlink, vote.weight);
+    if(global.CONFIG.broadcast) {
+        await golos.golos.broadcast.voteAsync(global.CONFIG.users[userid], userid, vote.author, vote.permlink, vote.weight);
     }
-    log.info("\t" + userid + " voted (" + global.settings.broadcast + ")");
+    log.info("\t" + userid + " voted (" + global.CONFIG.broadcast + ")");
 }
 
 async function followVote(vote) {
     log.info("follow vote " + vote.author + "/" + vote.permlink);
-    let content = await steem.api.getContentAsync(vote.author, vote.permlink);
+    let content = await golos.golos.api.getContentAsync(vote.author, vote.permlink);
     vote.weight == 10000;
-    for(let userid of Object.keys(global.settings.users)) {
+    let voted = false;
+    for(let userid of Object.keys(global.CONFIG.users)) {
         if(notVoted(content, userid, vote)) {
             await doVote(vote, userid);
+            voted = true;
         }
     }
+    return voted;
 }
 
 async function processBlock(bn) {
     
-        let transactions = await steem.api.getOpsInBlockAsync(bn, false);
+        let transactions = await golos.golos.api.getOpsInBlockAsync(bn, false);
         //log.debug(JSON.stringify(transactions));
         for(let tr of transactions) {
             log.trace("tr " + tr.trx_in_block);
@@ -112,12 +118,13 @@ async function processBlock(bn) {
             let opBody = tr.op[1];
             switch(op) {
                 case "vote":
-                    if(global.settings.leaders.includes(opBody.voter)) {
+                    if(Object.keys(global.CONFIG.leaders).includes(opBody.voter)) {
                         log.info("found vote of " + opBody.voter + " for " + opBody.author + "/" + opBody.permlink);
                         if(opBody.weight > 0 && await STATS[opBody.voter].checkVote()) {
-                            await followVote(opBody);
-                            STATS[opBody.voter].addVote();
-                            VOTED = true;
+                            if(await followVote(opBody)) {
+                                STATS[opBody.voter].addVote();
+                                VOTED = true;
+                            }
                         }
                     }
                     //break;
@@ -133,9 +140,11 @@ async function processBlock(bn) {
 module.exports.run = async function() {
 
     //FILL Stats
- 
-    for(let u of global.settings.leaders) {
-        STATS[u] = new Stat(u, Math.floor(30 / global.settings.leaders.length));
+    const MAX_VOTES = 30;
+    for(let u of Object.keys(global.CONFIG.leaders)) {
+        const votes = Math.floor(MAX_VOTES * global.CONFIG.leaders[u] / 100);
+        log.info("add leader " + u + "(votes = " + votes + ")");
+        STATS[u] = new Stat(u, votes);
     }
 
     let props = await golos.getCurrentServerTimeAndBlock();

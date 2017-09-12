@@ -27,7 +27,10 @@ if(typeof window == "undefined") {
         broadcast : false,
         minVotePower : 80,
         maxVotePower : 95,
-        leaders : ["eee", "ropox"],
+        leaders : {
+            "eee" : 80, 
+            "ropox" : 20
+        },
         users : {
             "ropox" : "5PRIVKEY"
         }

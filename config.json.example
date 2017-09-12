@@ -1,0 +1,11 @@
+{
+        golos_host : "https://golos.io",
+        golos_websocket : "wss://ws.golos.io",
+        leaders : {
+            "eee" : 80, 
+            "ropox" : 20
+        },
+        users : {
+            "ropox" : "5PRIVKEY"
+        }
+}
