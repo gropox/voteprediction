@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/gropox/voteprediction#readme",
   "dependencies": {
-    "golos-addons": "^1.0.3"
+    "golos-addons": "^1.0.3",
+    "golos-js": "^0.5.25"
   }
 }
