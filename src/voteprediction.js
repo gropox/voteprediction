@@ -140,7 +140,7 @@ async function processBlock(bn) {
 module.exports.run = async function() {
 
     //FILL Stats
-    const MAX_VOTES = 30;
+    const MAX_VOTES = global.CONFIG.shared_votes;
     for(let u of Object.keys(global.CONFIG.leaders)) {
         const votes = Math.floor(MAX_VOTES * global.CONFIG.leaders[u] / 100);
         log.info("add leader " + u + "(votes = " + votes + ")");

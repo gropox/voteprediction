@@ -1,11 +1,12 @@
 {
-        golos_host : "https://golos.io",
-        golos_websocket : "wss://ws.golos.io",
-        leaders : {
+        "golos_host" : "https://golos.io",
+        "golos_websocket" : "wss://ws.golos.io",
+        "shared_votes" : 35,
+        "leaders" : {
             "eee" : 80, 
             "ropox" : 20
         },
-        users : {
+        "users" : {
             "ropox" : "5PRIVKEY"
         }
 }
