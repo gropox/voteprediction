@@ -31,7 +31,7 @@ async function getMaxAge() {
     if(power < 0) {
         return MAXAGE;
     }
-    const scale = 1 - (power / POWERRANGE / 2);
+    const scale = 1 - (power / (POWERRANGE * RANGE));
     log.info("scale = " + scale);
     return scale * MAXAGE;
 }
@@ -97,7 +97,7 @@ async function doVote(vote, userid) {
 async function followVote(vote) {
     log.info("follow vote " + vote.author + "/" + vote.permlink);
     let content = await golos.golos.api.getContentAsync(vote.author, vote.permlink);
-    vote.weight == 10000;
+    //vote.weight == 10000;
     let voted = false;
     for(let userid of Object.keys(global.CONFIG.users)) {
         if(notVoted(content, userid, vote)) {
@@ -120,7 +120,7 @@ async function processBlock(bn) {
                 case "vote":
                     if(Object.keys(global.CONFIG.leaders).includes(opBody.voter)) {
                         log.info("found vote of " + opBody.voter + " for " + opBody.author + "/" + opBody.permlink);
-                        if(opBody.weight > 0 && await STATS[opBody.voter].checkVote()) {
+                        if(opBody.weight >= 0 && await STATS[opBody.voter].checkVote()) {
                             if(await followVote(opBody)) {
                                 STATS[opBody.voter].addVote();
                                 VOTED = true;
