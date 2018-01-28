@@ -109,28 +109,31 @@ async function followVote(vote) {
 }
 
 async function processBlock(bn) {
+    let block = await golos.golos.api.getBlockAsync(bn);
     
-        let transactions = await golos.golos.api.getOpsInBlockAsync(bn, false);
-        //log.debug(JSON.stringify(transactions));
-        for(let tr of transactions) {
-            log.trace("tr " + tr.trx_in_block);
-            let op = tr.op[0];
-            let opBody = tr.op[1];
-            switch(op) {
+    if (!block) {
+        return false;    
+    }
+    for (let tr of block.transactions) {
+        for (let operation of tr.operations) {
+            let op = operation[0];
+            let opBody = operation[1];
+            switch (op) {
                 case "vote":
-                    if(Object.keys(global.CONFIG.leaders).includes(opBody.voter)) {
+                    if (Object.keys(global.CONFIG.leaders).includes(opBody.voter)) {
                         log.info("found vote of " + opBody.voter + " for " + opBody.author + "/" + opBody.permlink);
-                        if(opBody.weight >= 0 && await STATS[opBody.voter].checkVote()) {
-                            if(await followVote(opBody)) {
+                        if (opBody.weight >= 0 && await STATS[opBody.voter].checkVote()) {
+                            if (await followVote(opBody)) {
                                 STATS[opBody.voter].addVote();
                                 VOTED = true;
                             }
                         }
                     }
-                    //break;
+                //break;
             }
         }
-    
+    }
+    return true;
 }
 
 
@@ -152,15 +155,17 @@ module.exports.run = async function() {
     //block = 7780489;
     log.info("start looping with block " + block);
     while(true) {
-        //log.info("processing block " + block);
+        log.debug("processing block " + block);
         try {
-            if(block >= props.block) {
+            if (block >= props.block) {
                 props = await golos.getCurrentServerTimeAndBlock();
                 await sleep(12000);
                 continue;
             }
             VOTED = false;
-            await processBlock(block++);
+            if (await processBlock(block)) {
+                block++;
+            }
             if(VOTED) {
                 log.info("***************************************")
                 let leaders = Object.keys(STATS);
