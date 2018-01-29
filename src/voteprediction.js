@@ -88,8 +88,12 @@ function notVoted(content, userid, vote) {
 }
 
 async function doVote(vote, userid) {
-    if(global.CONFIG.broadcast) {
-        await golos.golos.broadcast.voteAsync(global.CONFIG.users[userid], userid, vote.author, vote.permlink, vote.weight);
+    if (global.CONFIG.broadcast) {
+        try {
+            await golos.golos.broadcast.voteAsync(global.CONFIG.users[userid], userid, vote.author, vote.permlink, vote.weight);
+        } catch (e) {
+            log.error(e);
+        }
     }
     log.info("\t" + userid + " voted (" + global.CONFIG.broadcast + ")");
 }
