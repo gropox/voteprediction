@@ -1,3 +1,4 @@
+const golosjs = require("golos-js");
 const ga = require("golos-addons");
 const golos = ga.golos;
 const global = ga.global;
@@ -100,7 +101,7 @@ async function doVote(vote, userid) {
 
 async function followVote(vote) {
     log.info("follow vote " + vote.author + "/" + vote.permlink);
-    let content = await golos.golos.api.getContentAsync(vote.author, vote.permlink);
+    let content = await golosjs.api.getContentAsync(vote.author, vote.permlink, -1);
     //vote.weight == 10000;
     let voted = false;
     for(let userid of Object.keys(global.CONFIG.users)) {
