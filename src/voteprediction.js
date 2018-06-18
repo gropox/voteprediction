@@ -91,7 +91,7 @@ function notVoted(content, userid, vote) {
 async function doVote(vote, userid) {
     if (global.CONFIG.broadcast) {
         try {
-            await golos.golos.broadcast.voteAsync(global.CONFIG.users[userid], userid, vote.author, vote.permlink, vote.weight);
+            await golos.golos.broadcast.voteAsync(global.CONFIG.users[userid], userid, vote.author, vote.permlink, 10000);
         } catch (e) {
             log.error(e);
         }
@@ -141,6 +141,7 @@ async function processBlock(bn) {
     return true;
 }
 
+const DELAY=20
 
 /**
  * Для начала мы будет тупо повторять голоса за вожаком. 
@@ -156,13 +157,13 @@ module.exports.run = async function() {
     }
 
     let props = await golos.getCurrentServerTimeAndBlock();
-    let block = props.block - 3;
+    let block = props.block - DELAY;
     //block = 7780489;
     log.info("start looping with block " + block);
     while(true) {
         log.debug("processing block " + block);
         try {
-            if (block >= props.block) {
+            if (block >= props.block - DELAY) {
                 props = await golos.getCurrentServerTimeAndBlock();
                 await sleep(12000);
                 continue;
@@ -184,7 +185,7 @@ module.exports.run = async function() {
             log.error(golos.getExceptionCause(e));            
             await sleep(3000);
         }
-        await sleep(1500);
+        await sleep(500);
     }
     process.exit(1);
 }
